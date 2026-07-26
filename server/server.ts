@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import connectDb from "./config/db.js";
 import authRouter from "./routes/authRoutes.js";
+import restaurantRouter from "./routes/restaurantRoutes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 const port = process.env.PORT || 5000;
 
 app.use("/api/auth", authRouter);
+app.use("/api/restaurant", restaurantRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.send("Server is Live!");
