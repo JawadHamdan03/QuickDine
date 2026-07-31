@@ -1,6 +1,7 @@
 import { Schema, Document, model, Types } from "mongoose";
 
 export interface IRestaurant extends Document {
+    id: string;
     name: string;
     slug: string;
     description: string;
@@ -45,5 +46,23 @@ const RestaurantSchema = new Schema<IRestaurant>({
 }, { timestamps: true });
 
 
+
+RestaurantSchema.set("toJSON", {
+    transform: (doc, ret) => {
+        if (ret._id) {
+            ret.id = ret._id.toString();
+        }
+        return ret;
+    },
+});
+
+RestaurantSchema.set("toObject", {
+    transform: (doc, ret) => {
+        if (ret._id) {
+            ret.id = ret._id.toString();
+        }
+        return ret;
+    },
+});
 
 export const Restaurant = model<IRestaurant>("Restaurant", RestaurantSchema);
