@@ -1,0 +1,38 @@
+import { Schema, model } from "mongoose";
+const RestaurantSchema = new Schema({
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    description: { type: String, default: "" },
+    cuisine: { type: String, required: true, trim: true },
+    priceRange: { type: String, enum: ["$", "$$", "$$$", "$$$$"], default: "$$" },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount: { type: Number, default: 0, min: 0 },
+    location: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    image: { type: String, default: "" },
+    chef: { type: String, default: "" },
+    tags: { type: [String], default: [] },
+    availableSlots: { type: [String], default: [] },
+    featured: { type: Boolean, default: false },
+    exclusive: { type: Boolean, default: false },
+    owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    totalSeats: { type: Number, required: true, min: 1, default: 1 },
+}, { timestamps: true });
+RestaurantSchema.set("toJSON", {
+    transform: (doc, ret) => {
+        if (ret._id) {
+            ret.id = ret._id.toString();
+        }
+        return ret;
+    },
+});
+RestaurantSchema.set("toObject", {
+    transform: (doc, ret) => {
+        if (ret._id) {
+            ret.id = ret._id.toString();
+        }
+        return ret;
+    },
+});
+export const Restaurant = model("Restaurant", RestaurantSchema);
