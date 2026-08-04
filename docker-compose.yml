@@ -1,0 +1,64 @@
+services:
+  # ---------------------------------------------------------------------------
+  # MongoDB
+  # ---------------------------------------------------------------------------
+  db:
+    image: mongo:7
+    container_name: quickdine-db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: quick-dine
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      # Exposed on the host so you can connect with Compass / mongosh if needed.
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Express API (server)
+  # ---------------------------------------------------------------------------
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: quickdine-server
+    restart: unless-stopped
+    env_file:
+      - ./server/.env.docker
+    environment:
+      # Point the API at the Mongo service on the compose network (overrides
+      # whatever host value sits in .env.docker).
+      MONGODB_URI: mongodb://db:27017/quick-dine
+      PORT: "5000"
+      NODE_ENV: production
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # React SPA (client) served by nginx
+  # ---------------------------------------------------------------------------
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        # Baked into the bundle at build time. The browser reaches the API on
+        # the host, so this is a host URL, NOT the "server" service name.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api}
+    container_name: quickdine-client
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:

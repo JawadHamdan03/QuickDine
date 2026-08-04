@@ -5,11 +5,12 @@ import Footer from "../../components/Footer.tsx";
 import Loader from "../../components/Loader.tsx";
 import { useAppContext } from "../../context/AppContext.tsx";
 import { ShieldCheckIcon, CheckCircleIcon, BarChart3Icon } from "lucide-react";
+import toast from "react-hot-toast";
+import api from "../../lib/api.ts";
 
 // Subcomponents
 import AdminApprovals from "../../components/admin/AdminApprovals.tsx";
 import AdminStats from "../../components/admin/AdminStats.tsx";
-import { dummyAdminStats, dummyRestaurant } from "../../assets/assets.ts";
 
 export default function AdminDashboard() {
     const { logout } = useAppContext();
@@ -20,14 +21,31 @@ export default function AdminDashboard() {
     const [btnLoading, setBtnLoading] = useState<string | null>(null);
 
     const fetchAdminData = async () => {
-        setRestaurants(dummyRestaurant);
-        setStats(dummyAdminStats);
-        setLoading(false);
+        try {
+            const [restaurantsRes, statsRes] = await Promise.all([
+                api.get("/admin/restaurants"),
+                api.get("/admin/stats")
+            ]);
+            setRestaurants(restaurantsRes.data);
+            setStats(statsRes.data);
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to load admin data");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleApproveStatus = async (restaurantId: string, status: "approved" | "rejected") => {
-        console.log(restaurantId, status);
-        setBtnLoading(null);
+        setBtnLoading(restaurantId);
+        try {
+            await api.put(`/admin/restaurants/${restaurantId}/approve`, { status });
+            toast.success(`Restaurant ${status} successfully`);
+            await fetchAdminData();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to update status");
+        } finally {
+            setBtnLoading(null);
+        }
     };
 
     useEffect(() => {

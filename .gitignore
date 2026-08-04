@@ -1,1 +1,12 @@
 QUICKDINE_BACKEND_NOTES.md
+
+# Local env files (contain secrets) — never commit
+.env
+.env.docker
+server/.env
+server/.env.docker
+client/.env
+.env.example
+.claude
+CLAUDE.md
+.vscode

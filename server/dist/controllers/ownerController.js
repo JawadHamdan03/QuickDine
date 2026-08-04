@@ -32,7 +32,7 @@ export const createOwnerRestaurant = async (req, res) => {
     try {
         const { name, description, cuisine, priceRange, location, address, chef, tags, availableSlots, totalSeats } = req.body;
         const existing = await Restaurant.find({ owner: req.user?._id });
-        if (existing) {
+        if (existing.length > 0) {
             res.status(400).json({ message: "you already have a restaurant" });
             return;
         }
@@ -62,10 +62,10 @@ export const createOwnerRestaurant = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-// PUT /api/owner/restaurant/:id
+// PUT /api/owner/restaurant
 export const updateOwnerRestaurant = async (req, res) => {
     try {
-        const restaurant = await Restaurant.findById(req.params.id);
+        const restaurant = await Restaurant.findOne({ owner: req.user?._id });
         if (!restaurant) {
             res.status(404).json({ message: "Restaurant not found." });
             return;
