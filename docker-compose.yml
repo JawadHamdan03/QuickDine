@@ -6,6 +6,9 @@ services:
     image: mongo:7
     container_name: quickdine-db
     restart: unless-stopped
+    # --quiet + low verbosity silences the per-connection log spam from the
+    # healthcheck pinging every 10s.
+    command: ["--quiet", "--setParameter", "logLevel=0"]
     environment:
       MONGO_INITDB_DATABASE: quick-dine
     volumes:
@@ -38,6 +41,29 @@ services:
       NODE_ENV: production
     ports:
       - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # One-shot seeder: wipes and reseeds the DB, then exits.
+  # Runs only when explicitly requested (behind the "seed" profile) because
+  # seed.ts clears User/Restaurant/Booking before inserting.
+  #   docker compose --profile seed run --rm seed
+  # ---------------------------------------------------------------------------
+  seed:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: quickdine-server
+    profiles: ["seed"]
+    restart: "no"
+    env_file:
+      - ./server/.env.docker
+    environment:
+      MONGODB_URI: mongodb://db:27017/quick-dine
+      NODE_ENV: production
+    command: ["npm", "run", "seed"]
     depends_on:
       db:
         condition: service_healthy
